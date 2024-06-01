@@ -21,6 +21,8 @@ jobs:
           aws-region: ${{ env.AWS_REGION}}
       - name: Checkout Code
         uses: actions/checkout@v4
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2
       - name: Docker Login To AWS ECR
         uses: docker/login-action@v3
         with:
@@ -28,12 +30,14 @@ jobs:
           username: ${{ secrets.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Create AWS EC Repo
+        continue-on-error: true # This is super important so that we won't encounter any errors we rerun the workflow multiple times. If this is not present and you rerun the workflow multiple times, this step will actually fail because the repo name already exists
         run: |
           aws ecr create-repository --repository-name ${{ env.AWS_REPO_NAME }}
-
       - name: Docker Build & Push
         uses: docker/build-push-action@v5
         with:
           context: next-app/
           push: true
           tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.AWS_REPO_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
