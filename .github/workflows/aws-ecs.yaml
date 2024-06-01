@@ -52,9 +52,9 @@ jobs:
       - name: Register Task Definition
         run: |
           aws ecs register-task-definition --cli-input-json file://task-definition.json
-      - name: Create Or Update Service
+      - name: Create Service
+        continue-on-error: true
         run: |
-          aws ecs describe-services --cluster ${{ env.AWS_CLUSTER_NAME }} --services ${{ env.AWS_SERVICE_NAME }} --region ${{ env.AWS_REGION }} || \
           aws ecs create-service \
              --cluster ${{ env.AWS_CLUSTER_NAME }} \
              --service-name ${{ env.AWS_SERVICE_NAME }} \
