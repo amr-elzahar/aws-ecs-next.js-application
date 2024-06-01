@@ -8,6 +8,10 @@ env:
   AWS_REGION: us-east-1
   AWS_ACCOUNT_ID: 224732705809
   AWS_REPO_NAME: nextjs-application
+  AWS_CLUSTER_NAME: nextjs-application-cluster
+  AWS_SERVICE_NAME: nextjs-application-service
+  AWS_SUBNET_ID: subnet-0c2498747a4bc442d
+  AWS_SECURITY_GROUP_ID: sg-09e8ee3206242b2a5
 
 jobs:
   aws-ecs-fargate-nextjs:
@@ -30,8 +34,8 @@ jobs:
           username: ${{ secrets.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Create AWS EC Repo
-        continue-on-error: true # This is super important so that we won't encounter any errors we rerun the workflow multiple times. If this is not present and you rerun the workflow multiple times, this step will actually fail because the repo name already exists
         run: |
+          aws ecr describe-repositories --repository-name ${{ env.AWS_REPO_NAME }} || \
           aws ecr create-repository --repository-name ${{ env.AWS_REPO_NAME }}
       - name: Docker Build & Push
         uses: docker/build-push-action@v5
@@ -41,3 +45,22 @@ jobs:
           tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.AWS_REPO_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Create AWS ECS Cluster
+        run: |
+          aws ecs describe-clusters --clusters ${{ env.AWS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }} || \
+          aws ecs create-cluster --cluster-name ${{ env.AWS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+      - name: Register Task Definition
+        run: |
+          aws ecs register-task-definition --cli-input-json file://task-definition.json
+      - name: Create Or Update Service
+        run: |
+          aws ecs describe-services --cluster ${{ env.AWS_CLUSTER_NAME }} --services ${{ env.AWS_SERVICE_NAME }} --region ${{ env.AWS_REGION }} | grep "\"serviceName\": \"${{ env.AWS_SERVICE_NAME }}\"" || \
+          aws ecs create-service \
+             --cluster ${{ env.AWS_CLUSTER_NAME }} \
+             --service-name ${{ env.AWS_SERVICE_NAME }} \
+             --task-definition nextjs-application-task \
+             --desired-count 1 \
+             --launch-type FARGATE \
+             --network-configuration "awsvpcConfiguration={subnets=[${{ env.AWS_SUBNET_ID }}],securityGroups=[${{ env.AWS_SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
+             --region ${{ env.AWS_REGION }}
+          fi

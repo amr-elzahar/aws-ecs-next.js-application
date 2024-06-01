@@ -1,0 +1,23 @@
+{
+  "family": "nextjs-application-task",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "nextjs-container",
+      "image": "224732705809.dkr.ecr.us-east-1.amazonaws.com/nextjs-application:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000
+        }
+      ],
+      "memory": 512,
+      "cpu": 256
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::224732705809:role/ecsTaskExecutionRole"
+}
