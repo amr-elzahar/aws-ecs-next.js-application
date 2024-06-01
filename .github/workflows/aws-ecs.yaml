@@ -10,6 +10,7 @@ env:
   AWS_REPO_NAME: nextjs-application
   AWS_CLUSTER_NAME: nextjs-application-cluster
   AWS_SERVICE_NAME: nextjs-application-service
+  AWS_TASK_DEFINITION: nextjs-application-task
   AWS_SUBNET_ID: subnet-0c2498747a4bc442d
   AWS_SECURITY_GROUP_ID: sg-09e8ee3206242b2a5
 
@@ -56,7 +57,7 @@ jobs:
         continue-on-error: true
         run: |
           if aws ecs describe-services --cluster ${{ env.AWS_CLUSTER_NAME }} --services ${{ env.AWS_SERVICE_NAME }} --region ${{ env.AWS_REGION }} | grep -i "\"servicename\": \"${{ env.AWS_SERVICE_NAME }}\""; then
-          aws ecs update-service --cluster ${{ env.AWS_CLUSTER_NAME }} --service ${{ env.AWS_SERVICE_NAME }} --task-definition my-task --desired-count 1 --region ${{ env.AWS_REGION }}
+          aws ecs update-service --cluster ${{ env.AWS_CLUSTER_NAME }} --service ${{ env.AWS_SERVICE_NAME }} --task-definition ${{ env.AWS_TASK_DEFINITION }} --desired-count 1 --region ${{ env.AWS_REGION }}
           else
             aws ecs create-service \
                --cluster ${{ env.AWS_CLUSTER_NAME }} \
