@@ -55,11 +55,15 @@ jobs:
       - name: Create Service
         continue-on-error: true
         run: |
-          aws ecs create-service \
-             --cluster ${{ env.AWS_CLUSTER_NAME }} \
-             --service-name ${{ env.AWS_SERVICE_NAME }} \
-             --task-definition nextjs-application-task \
-             --desired-count 1 \
-             --launch-type FARGATE \
-             --network-configuration "awsvpcConfiguration={subnets=[${{ env.AWS_SUBNET_ID }}],securityGroups=[${{ env.AWS_SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
-             --region ${{ env.AWS_REGION }}
+          if aws ecs describe-services --cluster ${{ env.AWS_CLUSTER_NAME }} --services ${{ env.AWS_SERVICE_NAME }} --region ${{ env.AWS_REGION }} | grep -i "\"servicename\": \"${{ env.AWS_SERVICE_NAME }}\""; then
+          aws ecs update-service --cluster ${{ env.AWS_CLUSTER_NAME }} --service ${{ env.AWS_SERVICE_NAME }} --task-definition my-task --desired-count 1 --region ${{ env.AWS_REGION }}
+          else
+            aws ecs create-service \
+               --cluster ${{ env.AWS_CLUSTER_NAME }} \
+               --service-name ${{ env.AWS_SERVICE_NAME }} \
+               --task-definition nextjs-application-task \
+               --desired-count 1 \
+               --launch-type FARGATE \
+               --network-configuration "awsvpcConfiguration={subnets=[${{ env.AWS_SUBNET_ID }}],securityGroups=[${{ env.AWS_SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
+               --region ${{ env.AWS_REGION }}
+          fi
