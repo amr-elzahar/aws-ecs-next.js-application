@@ -1,0 +1,34 @@
+name: AWS ECS Next.js
+
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 224732705809
+  APP_NAME: nextjs-application
+
+jobs:
+  aws-ecs-fargate-nextjs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: AWS AuthN
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION}}
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Docker Login To AWS ECR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Docker Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.APP_NAME }}:latest
