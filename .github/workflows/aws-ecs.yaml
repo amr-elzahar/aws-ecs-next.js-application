@@ -63,4 +63,3 @@ jobs:
              --launch-type FARGATE \
              --network-configuration "awsvpcConfiguration={subnets=[${{ env.AWS_SUBNET_ID }}],securityGroups=[${{ env.AWS_SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
              --region ${{ env.AWS_REGION }}
-          fi
