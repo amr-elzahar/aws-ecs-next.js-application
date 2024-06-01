@@ -30,5 +30,6 @@ jobs:
       - name: Docker Build & Push
         uses: docker/build-push-action@v5
         with:
+          context: next-app/
           push: true
           tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.APP_NAME }}:latest
