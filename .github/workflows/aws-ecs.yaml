@@ -46,15 +46,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Create AWS ECS Cluster
+        continue-on-error: true
         run: |
-          aws ecs describe-clusters --clusters ${{ env.AWS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }} || \
           aws ecs create-cluster --cluster-name ${{ env.AWS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
       - name: Register Task Definition
         run: |
           aws ecs register-task-definition --cli-input-json file://task-definition.json
       - name: Create Or Update Service
         run: |
-          aws ecs describe-services --cluster ${{ env.AWS_CLUSTER_NAME }} --services ${{ env.AWS_SERVICE_NAME }} --region ${{ env.AWS_REGION }} | grep "\"serviceName\": \"${{ env.AWS_SERVICE_NAME }}\"" || \
+          aws ecs describe-services --cluster ${{ env.AWS_CLUSTER_NAME }} --services ${{ env.AWS_SERVICE_NAME }} --region ${{ env.AWS_REGION }} || \
           aws ecs create-service \
              --cluster ${{ env.AWS_CLUSTER_NAME }} \
              --service-name ${{ env.AWS_SERVICE_NAME }} \
